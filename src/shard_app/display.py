@@ -2,13 +2,46 @@
 
 Owns the rendering of the calculator's display value. Previously the display
 string was rendered inline by the calculator template; that responsibility now
-lives in :class:`Display` so the rest of the app talks to one component.
+lives in :class:`Display`, backed by the single :func:`format_value` helper so
+every rendered value flows through one place.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
+
+DEFAULT_PRECISION = 2
+
+
+def format_value(value: Any, *, precision: int = DEFAULT_PRECISION) -> str:
+    """Render a raw calculator value as the display string.
+
+    Every value shown on the display flows through this single helper so the
+    formatting rules live in one place:
+
+    - ``None`` renders as the idle screen ``"0"``.
+    - Booleans render as their literal text (they are not numbers).
+    - Integers render without a decimal point.
+    - Floats render at ``precision`` decimals, collapsing ``-0`` to ``"0"``
+      and dropping trailing zeros so ``7.00`` reads as ``"7"``.
+    - Anything else is passed through as its string form unchanged.
+    """
+    if value is None:
+        return "0"
+    if isinstance(value, bool):
+        return str(value)
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, float):
+        numeric = float(value)
+        if numeric == 0:
+            numeric = 0.0
+        text = f"{numeric:.{precision}f}"
+        if "." in text:
+            text = text.rstrip("0").rstrip(".")
+        return text or "0"
+    return str(value)
 
 
 @dataclass
@@ -20,17 +53,12 @@ class Display:
     """
 
     value: Any = None
+    precision: int = DEFAULT_PRECISION
 
     def render(self) -> str:
-        """Return the display text for the current value.
-
-        ``None`` (the idle state) renders as ``"0"``; any other value is shown
-        as its string form. Behavior matches the previous inline rendering.
-        """
-        if self.value is None:
-            return "0"
-        return str(self.value)
+        """Return the formatted display text, routing through format_value."""
+        return format_value(self.value, precision=self.precision)
 
     def set(self, value: Any) -> None:
-        """Stage a new value to be rendered."""
+        """Stage a new value; :meth:`render` formats it on demand."""
         self.value = value

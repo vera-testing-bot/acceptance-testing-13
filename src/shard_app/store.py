@@ -20,7 +20,7 @@ from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from typing import Any
 
-from .display import Display
+from .display import DEFAULT_PRECISION, Display
 
 SCHEMA_VERSION = 2
 
@@ -234,12 +234,17 @@ class Store:
     def display_component(self) -> Display:
         """Build the calculator's :class:`Display` from current state.
 
-        The calculator renders its display through this component so the
-        display layer has a single owner. The store's own ``display`` value is
-        untouched; rendering is a view over it, which keeps behavior unchanged
-        for callers reading the raw value.
+        The calculator renders its display through this component so every
+        rendered value flows through :func:`format_value`. The store's own
+        ``display`` value is untouched; rendering is a view over it, which
+        keeps behavior unchanged for callers reading the raw value.
         """
-        return Display(value=self._state.display)
+        precision = self._state.settings.get("precision", DEFAULT_PRECISION)
+        try:
+            precision_int = int(precision)
+        except (TypeError, ValueError):
+            precision_int = DEFAULT_PRECISION
+        return Display(value=self._state.display, precision=precision_int)
 
     def debug_view(self, limit: int = 20) -> dict[str, Any]:
         """Observability: current state, recent transitions, who wrote what."""
