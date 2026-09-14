@@ -54,6 +54,7 @@ class Display:
 
     value: Any = None
     precision: int = DEFAULT_PRECISION
+    aria_live: str = "polite"
 
     def render(self) -> str:
         """Return the formatted display text, routing through format_value."""
@@ -62,3 +63,12 @@ class Display:
     def set(self, value: Any) -> None:
         """Stage a new value; :meth:`render` formats it on demand."""
         self.value = value
+
+    def aria_attributes(self) -> dict[str, str]:
+        """Accessibility metadata for the display element.
+
+        An ``aria-live`` region lets screen readers announce display updates;
+        ``aria-atomic`` ensures the whole value is read rather than fragments.
+        This metadata carries no visual styling, so rendering is unchanged.
+        """
+        return {"aria-live": self.aria_live, "aria-atomic": "true"}

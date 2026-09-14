@@ -244,7 +244,11 @@ class Store:
             precision_int = int(precision)
         except (TypeError, ValueError):
             precision_int = DEFAULT_PRECISION
-        return Display(value=self._state.display, precision=precision_int)
+        return Display(
+            value=self._state.display,
+            precision=precision_int,
+            aria_live="polite",
+        )
 
     def debug_view(self, limit: int = 20) -> dict[str, Any]:
         """Observability: current state, recent transitions, who wrote what."""

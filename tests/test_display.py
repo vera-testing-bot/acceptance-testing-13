@@ -93,3 +93,32 @@ def test_store_display_component_uses_settings_precision() -> None:
     store.set("settings", {"theme": "light", "precision": 3}, writer="settings")
     store.set("display", 3.14159, writer="engine")
     assert store.display_component().render() == "3.142"
+
+
+# --- Phase 3: accessibility pass ------------------------------------------
+
+
+def test_display_carries_aria_live_region() -> None:
+    attrs = Display().aria_attributes()
+    assert attrs["aria-live"] == "polite"
+    assert attrs["aria-atomic"] == "true"
+
+
+def test_display_aria_live_is_configurable() -> None:
+    assert Display(aria_live="assertive").aria_attributes()["aria-live"] == "assertive"
+
+
+def test_display_accessibility_adds_no_visual_change() -> None:
+    # The accessibility metadata must not alter the rendered text.
+    display = Display(value=7.0)
+    rendered = display.render()
+    assert rendered == "7"
+    assert "aria-live" in display.aria_attributes()
+    assert display.render() == rendered
+
+
+def test_store_display_component_carries_aria_live_region() -> None:
+    store = Store()
+    attrs = store.display_component().aria_attributes()
+    assert attrs["aria-live"] == "polite"
+    assert attrs["aria-atomic"] == "true"
