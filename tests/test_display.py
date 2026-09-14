@@ -61,6 +61,15 @@ def test_format_value_collapses_negative_zero() -> None:
     assert format_value(-0.000, precision=2) == "0"
 
 
+def test_format_value_collapses_tiny_negative_rounding_to_zero() -> None:
+    # Floating-point arithmetic routinely yields tiny negatives like -0.001;
+    # rounded to precision 2 they format as "-0.00" → "-0", which must collapse
+    # to "0" per the documented -0 → "0" contract (not stay as "-0").
+    assert format_value(-0.001, precision=2) == "0"
+    assert format_value(-0.004, precision=2) == "0"
+    assert format_value(-0.0001, precision=3) == "0"
+
+
 def test_format_value_passes_non_numeric_strings_through() -> None:
     assert format_value("Error") == "Error"
     assert format_value("8") == "8"

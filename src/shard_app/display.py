@@ -35,12 +35,15 @@ def format_value(value: Any, *, precision: int = DEFAULT_PRECISION) -> str:
         return str(value)
     if isinstance(value, float):
         numeric = float(value)
-        if numeric == 0:
-            numeric = 0.0
         text = f"{numeric:.{precision}f}"
         if "." in text:
             text = text.rstrip("0").rstrip(".")
-        return text or "0"
+        # Collapse any representation that rounds to zero (e.g. "-0",
+        # "-0.00" after stripping, or genuine -0.0) to the plain "0"
+        # idle glyph, matching the documented -0 → "0" contract.
+        if text.lstrip("-").lstrip("0") == "":
+            return "0"
+        return text
     return str(value)
 
 
