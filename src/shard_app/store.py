@@ -20,6 +20,8 @@ from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from typing import Any
 
+from .display import Display
+
 SCHEMA_VERSION = 2
 
 Deserializer = Callable[[dict[str, Any]], dict[str, Any]]
@@ -228,6 +230,16 @@ class Store:
     def history_view(self) -> list[dict[str, Any]]:
         """History is a view over the store, not a separate copy."""
         return copy.deepcopy(self._state.history)
+
+    def display_component(self) -> Display:
+        """Build the calculator's :class:`Display` from current state.
+
+        The calculator renders its display through this component so the
+        display layer has a single owner. The store's own ``display`` value is
+        untouched; rendering is a view over it, which keeps behavior unchanged
+        for callers reading the raw value.
+        """
+        return Display(value=self._state.display)
 
     def debug_view(self, limit: int = 20) -> dict[str, Any]:
         """Observability: current state, recent transitions, who wrote what."""
